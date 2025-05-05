@@ -1,0 +1,338 @@
+import 'package:flutter/material.dart';
+import 'package:sms_frontend/data/vos/classes_vo.dart';
+import 'package:sms_frontend/data/vos/teacher_vo.dart';
+import 'package:sms_frontend/network/service/school_api_service.dart';
+import 'package:sms_frontend/utils/extensions/navigation_extensions.dart';
+import 'package:sms_frontend/utils/extensions/snack_bar_extensions.dart';
+
+class ManageClassesPage extends StatefulWidget {
+  const ManageClassesPage({super.key});
+
+  @override
+  State<ManageClassesPage> createState() => _ManageClassesPageState();
+}
+
+class _ManageClassesPageState extends State<ManageClassesPage> {
+  final _api = SchoolApiService();
+  List<ClassesVO> _classes = [];
+  List<TeachersVO> _teachers = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    setState(() => _isLoading = true);
+    try {
+      final classes = await _api.getClasses();
+      final teachers = await _api.getTeachers();
+      setState(() {
+        _classes = classes;
+        _teachers = teachers;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() => _isLoading = false);
+      if (mounted) {
+        context.showErrorSnackBar(e.toString());
+      }
+    }
+  }
+
+  void _showTeacherSelectorDialog(Function(int, String) onSelected) {
+    final searchController = TextEditingController();
+    List<TeachersVO> filteredTeachers = List.from(_teachers);
+
+    showDialog(
+      context: context,
+      builder:
+          (_) => StatefulBuilder(
+            builder:
+                (context, setState) => AlertDialog(
+                  title: const Text('Select Teacher'),
+                  content: SizedBox(
+                    width: 400,
+                    height: 400,
+                    child: Column(
+                      children: [
+                        TextField(
+                          controller: searchController,
+                          decoration: const InputDecoration(hintText: 'Search by name...', prefixIcon: Icon(Icons.search)),
+                          onChanged: (query) {
+                            setState(() {
+                              filteredTeachers = _teachers.where((t) => t.name.toLowerCase().contains(query.toLowerCase())).toList();
+                            });
+                          },
+                        ),
+                        const SizedBox(height: 10),
+                        Expanded(
+                          child:
+                              filteredTeachers.isEmpty
+                                  ? const Center(child: Text('No teachers found.'))
+                                  : ListView.builder(
+                                    itemCount: filteredTeachers.length,
+                                    itemBuilder: (_, index) {
+                                      final teacher = filteredTeachers[index];
+                                      return ListTile(
+                                        leading: CircleAvatar(child: Text(teacher.name[0])),
+                                        title: Text(teacher.name),
+                                        subtitle: Text(teacher.specialization),
+                                        onTap: () {
+                                          Navigator.pop(context);
+                                          onSelected(teacher.id, teacher.name);
+                                        },
+                                      );
+                                    },
+                                  ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel'))],
+                ),
+          ),
+    );
+  }
+
+  void _showClassFormDialog({ClassesVO? classVO}) {
+    final nameController = TextEditingController(text: classVO?.className ?? '');
+    final descriptionController = TextEditingController(text: classVO?.classDescription ?? '');
+    final remarkController = TextEditingController(text: classVO?.remark ?? '');
+    final roomController = TextEditingController(text: classVO?.roomNumber ?? '');
+
+    TimeOfDay? localStartTime;
+    TimeOfDay? localEndTime;
+    int? selectedTeacherId = classVO?.teacherId;
+    String selectedTeacherName = '';
+
+    if (classVO?.classDuration != null) {
+      final parts = classVO!.classDuration.split(' - ');
+      if (parts.length == 2) {
+        localStartTime = TimeOfDay(hour: int.parse(parts[0].split(':')[0]), minute: int.parse(parts[0].split(':')[1]));
+        localEndTime = TimeOfDay(hour: int.parse(parts[1].split(':')[0]), minute: int.parse(parts[1].split(':')[1]));
+      }
+    }
+
+    showDialog(
+      context: context,
+      builder:
+          (_) => StatefulBuilder(
+            builder: (context, setState) {
+              String formatTime(TimeOfDay? time) => time?.format(context) ?? '';
+
+              Future<void> pickTime(bool isStart) async {
+                final picked = await showTimePicker(context: context, initialTime: TimeOfDay.now());
+                if (picked != null) {
+                  setState(() {
+                    if (isStart) {
+                      localStartTime = picked;
+                    } else {
+                      localEndTime = picked;
+                    }
+                  });
+                }
+              }
+
+              return AlertDialog(
+                title: Text(classVO == null ? 'Add Class' : 'Edit Class'),
+                content: SizedBox(
+                  width: 400,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        TextField(controller: nameController, decoration: const InputDecoration(labelText: 'Class Name *')),
+                        TextFormField(
+                          controller: descriptionController,
+                          decoration: const InputDecoration(labelText: 'Description *'),
+                          maxLines: 3,
+                        ),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextButton.icon(
+                                icon: const Icon(Icons.access_time),
+                                label: Text(formatTime(localStartTime).isNotEmpty ? formatTime(localStartTime) : 'Start Time *'),
+                                onPressed: () => pickTime(true),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: TextButton.icon(
+                                icon: const Icon(Icons.access_time_outlined),
+                                label: Text(formatTime(localEndTime).isNotEmpty ? formatTime(localEndTime) : 'End Time *'),
+                                onPressed: () => pickTime(false),
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(
+                          width: double.infinity,
+                          child: TextButton.icon(
+                            icon: const Icon(Icons.person_search),
+                            label: Text(
+                              selectedTeacherId != null
+                                  ? selectedTeacherName.isNotEmpty
+                                      ? selectedTeacherName
+                                      : (_teachers
+                                          .firstWhere(
+                                            (t) => t.id == selectedTeacherId,
+                                            orElse:
+                                                () => TeachersVO(id: 0, name: '', email: '', phone: '', specialization: '', joinedDate: ''),
+                                          )
+                                          .name)
+                                  : 'Select Teacher *',
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            onPressed: () {
+                              _showTeacherSelectorDialog((id, name) {
+                                setState(() {
+                                  selectedTeacherId = id;
+                                  selectedTeacherName = name;
+                                });
+                              });
+                            },
+                          ),
+                        ),
+                        TextField(controller: roomController, decoration: const InputDecoration(labelText: 'Room Number *')),
+                        TextField(controller: remarkController, decoration: const InputDecoration(labelText: 'Remark')),
+                      ],
+                    ),
+                  ),
+                ),
+                actions: [
+                  TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+                  ElevatedButton(
+                    onPressed: () async {
+                      if (nameController.text.isEmpty ||
+                          descriptionController.text.isEmpty ||
+                          localStartTime == null ||
+                          localEndTime == null ||
+                          selectedTeacherId == null ||
+                          roomController.text.isEmpty) {
+                        context.showErrorSnackBar("Please fill all required fields.");
+                        return;
+                      }
+
+                      try {
+                        final durationString =
+                            "${localStartTime?.hour.toString().padLeft(2, '0')}:${localStartTime?.minute.toString().padLeft(2, '0')} - ${localEndTime?.hour.toString().padLeft(2, '0')}:${localEndTime?.minute.toString().padLeft(2, '0')}";
+
+                        final data = {
+                          'id': classVO?.id,
+                          'class_name': nameController.text,
+                          'class_description': descriptionController.text,
+                          'class_duration': durationString,
+                          'teacher_id': selectedTeacherId.toString(),
+                          'room_number': roomController.text,
+                          'remark': remarkController.text,
+                        }..removeWhere((k, v) => v == null);
+
+                        if (classVO == null) {
+                          await _api.createClass(data);
+                        } else {
+                          await _api.updateClass(data);
+                        }
+
+                        if (mounted) {
+                          context.navigateBack();
+                          _loadData();
+                        }
+                      } catch (e) {
+                        if (mounted) {
+                          context.showErrorSnackBar(e.toString());
+                        }
+                      }
+                    },
+                    child: const Text('Save'),
+                  ),
+                ],
+              );
+            },
+          ),
+    );
+  }
+
+  void _deleteClass(int id) async {
+    final confirm = await showDialog(
+      context: context,
+      builder:
+          (_) => AlertDialog(
+            title: const Text('Confirm Delete'),
+            content: const Text('Are you sure you want to delete this class?'),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+              ElevatedButton(onPressed: () => Navigator.pop(context, true), child: const Text('Delete')),
+            ],
+          ),
+    );
+
+    if (confirm == true) {
+      try {
+        await _api.deleteClass(id);
+        _loadData();
+      } catch (e) {
+        if (mounted) {
+          context.showErrorSnackBar(e.toString());
+        }
+      }
+    }
+  }
+
+  Widget _buildClassList() {
+    return Card(
+      margin: const EdgeInsets.all(16),
+      elevation: 3,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.lightBlue.shade100,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text("Classes", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                ElevatedButton.icon(icon: const Icon(Icons.add), label: const Text("Add Class"), onPressed: () => _showClassFormDialog()),
+              ],
+            ),
+          ),
+          const Divider(height: 1),
+          _classes.isEmpty
+              ? const Padding(padding: EdgeInsets.all(20), child: Text('No classes to display'))
+              : ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: _classes.length,
+                separatorBuilder: (_, __) => const Divider(height: 1),
+                itemBuilder: (_, index) {
+                  final classVO = _classes[index];
+                  return ListTile(
+                    leading: CircleAvatar(child: Text(classVO.className[0].toUpperCase())),
+                    title: Text(classVO.className),
+                    subtitle: Text("${classVO.classDescription} | Room: ${classVO.roomNumber}"),
+                    trailing: Wrap(
+                      spacing: 8,
+                      children: [
+                        IconButton(icon: const Icon(Icons.edit), onPressed: () => _showClassFormDialog(classVO: classVO)),
+                        IconButton(icon: const Icon(Icons.delete), onPressed: () => _deleteClass(classVO.id)),
+                      ],
+                    ),
+                  );
+                },
+              ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _isLoading ? const Center(child: CircularProgressIndicator()) : _buildClassList();
+  }
+}
