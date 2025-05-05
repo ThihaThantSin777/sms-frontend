@@ -8,7 +8,7 @@ import 'package:sms_frontend/network/response/base_response.dart';
 import 'package:sms_frontend/network/response/error_response.dart';
 
 class SchoolApiService {
-  final Dio _dio = Dio(BaseOptions(baseUrl: 'http://192.168.1.122/sms-backend'));
+  final Dio _dio = Dio(BaseOptions(baseUrl: 'http://192.168.1.37/sms-backend'));
 
   Future<UserVO> login(Map<String, dynamic> payload) async {
     try {
