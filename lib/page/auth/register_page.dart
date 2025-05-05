@@ -5,15 +5,16 @@ import 'package:sms_frontend/utils/extensions/navigation_extensions.dart';
 import 'package:sms_frontend/utils/extensions/snack_bar_extensions.dart';
 import 'package:sms_frontend/widgets/responsive_layout.dart';
 
-class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+class RegisterPage extends StatefulWidget {
+  const RegisterPage({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  State<RegisterPage> createState() => _RegisterPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _RegisterPageState extends State<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _apiService = SchoolApiService();
@@ -31,10 +32,11 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     try {
-      await _apiService.login({'email': _emailController.text, 'password': _passwordController.text});
+      await _apiService.createUser({'name': _nameController.text, 'email': _emailController.text, 'password': _passwordController.text});
+
       if (mounted) {
-        context.showSuccessSnackBar("Login successful!");
-        context.navigateToNextPageWithRemoveUntil(MyApp.routeDashboard);
+        context.showSuccessSnackBar("Registration successful!");
+        context.navigateToNextPageWithRemoveUntil(MyApp.routeLogin);
       }
     } catch (e) {
       setState(() => _errorMessage = e.toString());
@@ -59,12 +61,18 @@ class _LoginPageState extends State<LoginPage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                "Welcome Back 👋",
+                "Create Account",
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: Colors.lightBlue.shade700, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
-              const Text("Please log in to continue", style: TextStyle(color: Colors.grey)),
+              const Text("Please register to continue", style: TextStyle(color: Colors.grey)),
               const SizedBox(height: 32),
+              TextFormField(
+                controller: _nameController,
+                decoration: const InputDecoration(prefixIcon: Icon(Icons.person_outline), labelText: 'Name', border: OutlineInputBorder()),
+                validator: (v) => v!.isEmpty ? "Required" : null,
+              ),
+              const SizedBox(height: 20),
               TextFormField(
                 controller: _emailController,
                 decoration: const InputDecoration(prefixIcon: Icon(Icons.email_outlined), labelText: 'Email', border: OutlineInputBorder()),
@@ -93,11 +101,11 @@ class _LoginPageState extends State<LoginPage> {
                 height: 48,
                 child: ElevatedButton.icon(
                   onPressed: _isLoading ? null : _submit,
-                  icon: const Icon(Icons.login),
+                  icon: const Icon(Icons.app_registration),
                   label:
                       _isLoading
                           ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                          : const Text("Login"),
+                          : const Text("Register"),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.lightBlue.shade600,
                     foregroundColor: Colors.white,
@@ -105,14 +113,6 @@ class _LoginPageState extends State<LoginPage> {
                     textStyle: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text("Don't have an account?"),
-                  TextButton(onPressed: () => context.navigateToNextPage(MyApp.routeRegister), child: const Text("Register")),
-                ],
               ),
             ],
           ),
