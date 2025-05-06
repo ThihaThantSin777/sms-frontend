@@ -4,6 +4,8 @@ class TeachersVO {
   final String email;
   final String phone;
   final String specialization;
+  final String gender;
+  final String address;
   final String joinedDate;
 
   TeachersVO({
@@ -12,6 +14,8 @@ class TeachersVO {
     required this.email,
     required this.phone,
     required this.specialization,
+    required this.gender,
+    required this.address,
     required this.joinedDate,
   });
 
@@ -22,11 +26,22 @@ class TeachersVO {
       email: json['email'],
       phone: json['phone'],
       specialization: json['specialization'],
+      gender: json['gender'],
+      address: json['address'],
       joinedDate: json['joined_date'],
     );
   }
 
   Map<String, dynamic> toJson() {
-    return {'id': id, 'name': name, 'email': email, 'phone': phone, 'specialization': specialization, 'joined_date': joinedDate};
+    return {
+      'id': id,
+      'name': name,
+      'email': email,
+      'phone': phone,
+      'specialization': specialization,
+      'gender': gender,
+      'address': address,
+      'joined_date': joinedDate,
+    };
   }
 }

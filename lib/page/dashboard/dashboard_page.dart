@@ -62,7 +62,7 @@ class _DashboardPageState extends State<DashboardPage> {
     if (studentCount > 0) {
       sections.add(PieChartSectionData(value: studentCount.toDouble(), title: 'Students', color: Colors.green.shade400));
     }
-    if (_currentUser?.role == 'admin' && teacherCount > 0) {
+    if (teacherCount > 0) {
       sections.add(PieChartSectionData(value: teacherCount.toDouble(), title: 'Teachers', color: Colors.orange.shade400));
     }
     if (_currentUser?.role == 'admin' && userCount > 0) {
@@ -194,6 +194,9 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget _buildDashboardContent(double width) {
     return Column(
       children: [
+        const SizedBox(height: 20),
+        Image.asset('assets/logo.jpeg', height: 80),
+        const SizedBox(height: 8),
         _buildTopBar(),
         Expanded(
           child:
@@ -211,6 +214,26 @@ class _DashboardPageState extends State<DashboardPage> {
                       if (_currentUser?.role == 'admin')
                         _buildNavCard("Manage Teachers", Icons.school, () {
                           context.navigateToNextPage(MyApp.routeManageTeachers);
+                        }),
+                      if (_currentUser?.role == 'teacher')
+                        _buildNavCard("Search Students", Icons.search, () {
+                          context.navigateToNextPage(MyApp.routeStudentSearch);
+                        }),
+                      if (_currentUser?.role == 'teacher')
+                        _buildNavCard("Teaching Schedule", Icons.schedule, () {
+                          context.navigateToNextPage(MyApp.routeTeacherSchedule);
+                        }),
+                      if (_currentUser?.role == 'student')
+                        _buildNavCard("My Class", Icons.class_, () {
+                          context.navigateToNextPage(MyApp.routeStudentAttendClass);
+                        }),
+                      if (_currentUser?.role == 'student')
+                        _buildNavCard("Class Schedule", Icons.event, () {
+                          context.navigateToNextPage(MyApp.routeStudentClassSchedule);
+                        }),
+                      if (_currentUser?.role == 'student')
+                        _buildNavCard("Available Classes", Icons.list_alt, () {
+                          context.navigateToNextPage(MyApp.routeStudentApplyClass);
                         }),
                       _buildNavCard("Manage Students", Icons.group, () {
                         context.navigateToNextPage(MyApp.routeManageStudents);

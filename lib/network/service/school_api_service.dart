@@ -27,6 +27,7 @@ class SchoolApiService {
       await prefs.setString('user_id', user.id.toString());
       await prefs.setString('user_name', user.name);
       await prefs.setString('user_email', user.email);
+      await prefs.setString('user_phone', user.phone);
       await prefs.setString('user_role', user.role);
       await prefs.setString('user_create_at', user.createdAt);
 
@@ -41,6 +42,7 @@ class SchoolApiService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('user_id');
     await prefs.remove('user_name');
+    await prefs.remove('user_phone');
     await prefs.remove('user_email');
     await prefs.remove('user_role');
     await prefs.remove('user_create_at');
@@ -64,12 +66,13 @@ class SchoolApiService {
       final prefs = await SharedPreferences.getInstance();
       final id = prefs.getString('user_id');
       final name = prefs.getString('user_name');
+      final phone = prefs.getString('user_phone');
       final email = prefs.getString('user_email');
       final role = prefs.getString('user_role');
       final createdAt = prefs.getString('user_create_at');
 
       if (id != null && name != null && email != null && role != null) {
-        return UserVO(id: int.tryParse(id) ?? 0, name: name, email: email, role: role, createdAt: createdAt ?? "");
+        return UserVO(id: int.tryParse(id) ?? 0, name: name, email: email, phone: phone ?? '', role: role, createdAt: createdAt ?? "");
       }
 
       return null;

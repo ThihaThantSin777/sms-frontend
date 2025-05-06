@@ -100,20 +100,20 @@ class _ManageClassesPageState extends State<ManageClassesPage> {
   void _showClassFormDialog({ClassesVO? classVO}) {
     final nameController = TextEditingController(text: classVO?.className ?? '');
     final descriptionController = TextEditingController(text: classVO?.classDescription ?? '');
-    final remarkController = TextEditingController(text: classVO?.remark ?? '');
-    final roomController = TextEditingController(text: classVO?.roomNumber ?? '');
+    final durationController = TextEditingController(text: classVO?.durationMonths.toString() ?? '');
+    final maxStudentsController = TextEditingController(text: classVO?.maxStudents.toString() ?? '');
+    String classLevel = classVO?.classLevel ?? 'Beginner';
 
     TimeOfDay? localStartTime;
     TimeOfDay? localEndTime;
     int? selectedTeacherId = classVO?.teacherId;
     String selectedTeacherName = '';
 
-    if (classVO?.classDuration != null) {
-      final parts = classVO!.classDuration.split(' - ');
-      if (parts.length == 2) {
-        localStartTime = TimeOfDay(hour: int.parse(parts[0].split(':')[0]), minute: int.parse(parts[0].split(':')[1]));
-        localEndTime = TimeOfDay(hour: int.parse(parts[1].split(':')[0]), minute: int.parse(parts[1].split(':')[1]));
-      }
+    if (classVO?.startTime != null && classVO?.endTime != null) {
+      final startParts = classVO!.startTime.split(':');
+      final endParts = classVO.endTime.split(':');
+      localStartTime = TimeOfDay(hour: int.parse(startParts[0]), minute: int.parse(startParts[1]));
+      localEndTime = TimeOfDay(hour: int.parse(endParts[0]), minute: int.parse(endParts[1]));
     }
 
     showDialog(
@@ -168,6 +168,27 @@ class _ManageClassesPageState extends State<ManageClassesPage> {
                             ),
                           ],
                         ),
+                        TextField(
+                          controller: durationController,
+                          decoration: const InputDecoration(labelText: 'Duration (months) *'),
+                          keyboardType: TextInputType.number,
+                        ),
+                        TextField(
+                          controller: maxStudentsController,
+                          decoration: const InputDecoration(labelText: 'Max Students *'),
+                          keyboardType: TextInputType.number,
+                        ),
+                        DropdownButtonFormField<String>(
+                          decoration: const InputDecoration(labelText: 'Class Level *'),
+                          value: classLevel,
+                          items:
+                              [
+                                'Beginner',
+                                'Intermediate',
+                                'Advanced',
+                              ].map((level) => DropdownMenuItem(value: level, child: Text(level))).toList(),
+                          onChanged: (val) => setState(() => classLevel = val ?? 'Beginner'),
+                        ),
                         SizedBox(
                           width: double.infinity,
                           child: TextButton.icon(
@@ -180,7 +201,16 @@ class _ManageClassesPageState extends State<ManageClassesPage> {
                                           .firstWhere(
                                             (t) => t.id == selectedTeacherId,
                                             orElse:
-                                                () => TeachersVO(id: 0, name: '', email: '', phone: '', specialization: '', joinedDate: ''),
+                                                () => TeachersVO(
+                                                  id: 0,
+                                                  name: '',
+                                                  email: '',
+                                                  phone: '',
+                                                  specialization: '',
+                                                  joinedDate: '',
+                                                  address: '',
+                                                  gender: '',
+                                                ),
                                           )
                                           .name)
                                   : 'Select Teacher *',
@@ -196,8 +226,6 @@ class _ManageClassesPageState extends State<ManageClassesPage> {
                             },
                           ),
                         ),
-                        TextField(controller: roomController, decoration: const InputDecoration(labelText: 'Room Number *')),
-                        TextField(controller: remarkController, decoration: const InputDecoration(labelText: 'Remark')),
                       ],
                     ),
                   ),
@@ -211,24 +239,26 @@ class _ManageClassesPageState extends State<ManageClassesPage> {
                           localStartTime == null ||
                           localEndTime == null ||
                           selectedTeacherId == null ||
-                          roomController.text.isEmpty) {
+                          durationController.text.isEmpty ||
+                          maxStudentsController.text.isEmpty ||
+                          classLevel.isEmpty) {
                         context.showErrorSnackBar("Please fill all required fields.");
                         return;
                       }
 
                       try {
-                        final durationString =
-                            "${localStartTime?.hour.toString().padLeft(2, '0')}:${localStartTime?.minute.toString().padLeft(2, '0')} - ${localEndTime?.hour.toString().padLeft(2, '0')}:${localEndTime?.minute.toString().padLeft(2, '0')}";
-
                         final data = {
                           'id': classVO?.id,
                           'class_name': nameController.text,
                           'class_description': descriptionController.text,
-                          'class_duration': durationString,
+                          'start_time':
+                              "${localStartTime?.hour.toString().padLeft(2, '0')}:${localStartTime?.minute.toString().padLeft(2, '0')}",
+                          'end_time': "${localEndTime?.hour.toString().padLeft(2, '0')}:${localEndTime?.minute.toString().padLeft(2, '0')}",
+                          'duration_months': durationController.text,
+                          'max_students': maxStudentsController.text,
+                          'class_level': classLevel,
                           'teacher_id': selectedTeacherId.toString(),
-                          'room_number': roomController.text,
-                          'remark': remarkController.text,
-                        }..removeWhere((k, v) => v == null);
+                        }..removeWhere((k, v) => v == null || v.toString().isEmpty);
 
                         if (classVO == null) {
                           await _api.createClass(data);
@@ -236,12 +266,12 @@ class _ManageClassesPageState extends State<ManageClassesPage> {
                           await _api.updateClass(data);
                         }
 
-                        if (mounted) {
+                        if (context.mounted) {
                           context.navigateBack();
                           _loadData();
                         }
                       } catch (e) {
-                        if (mounted) {
+                        if (context.mounted) {
                           context.showErrorSnackBar(e.toString());
                         }
                       }
@@ -315,7 +345,7 @@ class _ManageClassesPageState extends State<ManageClassesPage> {
                   return ListTile(
                     leading: CircleAvatar(child: Text(classVO.className[0].toUpperCase())),
                     title: Text(classVO.className),
-                    subtitle: Text("${classVO.classDescription} | Room: ${classVO.roomNumber}"),
+                    subtitle: Text("${classVO.classDescription} | Duration: ${classVO.durationMonths} month(s)"),
                     trailing: Wrap(
                       spacing: 8,
                       children: [

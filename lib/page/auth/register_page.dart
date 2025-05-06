@@ -16,6 +16,7 @@ class _RegisterPageState extends State<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   final _apiService = SchoolApiService();
 
@@ -32,7 +33,12 @@ class _RegisterPageState extends State<RegisterPage> {
     });
 
     try {
-      await _apiService.createUser({'name': _nameController.text, 'email': _emailController.text, 'password': _passwordController.text});
+      await _apiService.createUser({
+        'name': _nameController.text,
+        'email': _emailController.text,
+        'password': _passwordController.text,
+        'phone': _phoneController.text,
+      });
 
       if (mounted) {
         context.showSuccessSnackBar("Registration successful!");
@@ -60,6 +66,8 @@ class _RegisterPageState extends State<RegisterPage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              Image.asset('assets/logo.jpeg', height: 80),
+              const SizedBox(height: 20),
               Text(
                 "Create Account",
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: Colors.lightBlue.shade700, fontWeight: FontWeight.bold),
@@ -76,6 +84,12 @@ class _RegisterPageState extends State<RegisterPage> {
               TextFormField(
                 controller: _emailController,
                 decoration: const InputDecoration(prefixIcon: Icon(Icons.email_outlined), labelText: 'Email', border: OutlineInputBorder()),
+                validator: (v) => v!.isEmpty ? "Required" : null,
+              ),
+              const SizedBox(height: 20),
+              TextFormField(
+                controller: _phoneController,
+                decoration: const InputDecoration(prefixIcon: Icon(Icons.phone_outlined), labelText: 'Phone', border: OutlineInputBorder()),
                 validator: (v) => v!.isEmpty ? "Required" : null,
               ),
               const SizedBox(height: 20),

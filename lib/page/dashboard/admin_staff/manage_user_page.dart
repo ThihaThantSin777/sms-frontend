@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sms_frontend/data/vos/user_vo.dart';
 import 'package:sms_frontend/network/service/school_api_service.dart';
+import 'package:sms_frontend/utils/extensions/navigation_extensions.dart';
 
 class ManageUserPage extends StatefulWidget {
   const ManageUserPage({super.key});
@@ -42,6 +43,7 @@ class _ManageUserPageState extends State<ManageUserPage> {
   void _showUserFormDialog({UserVO? user}) {
     final nameController = TextEditingController(text: user?.name ?? '');
     final emailController = TextEditingController(text: user?.email ?? '');
+    final phoneController = TextEditingController(text: user?.phone ?? '');
     final passwordController = TextEditingController();
     String role = user?.role ?? 'staff';
 
@@ -57,6 +59,7 @@ class _ManageUserPageState extends State<ManageUserPage> {
                 children: [
                   TextField(controller: nameController, decoration: const InputDecoration(labelText: 'Name')),
                   TextField(controller: emailController, decoration: const InputDecoration(labelText: 'Email')),
+                  TextField(controller: phoneController, decoration: const InputDecoration(labelText: 'Phone')),
                   if (user == null)
                     TextField(controller: passwordController, decoration: const InputDecoration(labelText: 'Password'), obscureText: true),
                   DropdownButtonFormField<String>(
@@ -80,6 +83,7 @@ class _ManageUserPageState extends State<ManageUserPage> {
                       'id': user?.id,
                       'name': nameController.text,
                       'email': emailController.text,
+                      'phone': phoneController.text,
                       if (user == null) 'password': passwordController.text,
                       'role': role,
                     }..removeWhere((key, value) => value == null);
@@ -90,7 +94,9 @@ class _ManageUserPageState extends State<ManageUserPage> {
                       await _api.updateUser(data);
                     }
 
-                    Navigator.pop(context);
+                    if (mounted) {
+                      context.navigateBack();
+                    }
                     _loadUsers();
                   } catch (e) {
                     _showError(e.toString());

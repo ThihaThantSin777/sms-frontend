@@ -111,7 +111,17 @@ class _ManageStudentsPageState extends State<ManageStudentsPage> {
             .firstWhere(
               (cls) => cls.id == selectedClassId,
               orElse:
-                  () => ClassesVO(id: 0, className: '', classDescription: '', classDuration: '', teacherId: 0, roomNumber: '', remark: ''),
+                  () => ClassesVO(
+                    id: 0,
+                    className: '',
+                    classDescription: '',
+                    startTime: '',
+                    endTime: '',
+                    durationMonths: 0,
+                    maxStudents: 0,
+                    classLevel: '',
+                    teacherId: 0,
+                  ),
             )
             .className;
 
@@ -188,7 +198,7 @@ class _ManageStudentsPageState extends State<ManageStudentsPage> {
                             await _api.updateStudent(data);
                           }
 
-                          if (mounted) {
+                          if (context.mounted) {
                             context.navigateBack();
                             _loadStudents();
                           }
@@ -264,8 +274,8 @@ class _ManageStudentsPageState extends State<ManageStudentsPage> {
                 itemBuilder: (_, index) {
                   final student = _students[index];
                   return ListTile(
-                    leading: CircleAvatar(child: Text(student.name[0].toUpperCase())),
-                    title: Text(student.name),
+                    leading: CircleAvatar(child: Text(student.name?[0].toUpperCase() ?? '')),
+                    title: Text(student.name ?? ''),
                     subtitle: Text("${student.email} | ${student.phone}"),
                     trailing: Wrap(
                       spacing: 8,

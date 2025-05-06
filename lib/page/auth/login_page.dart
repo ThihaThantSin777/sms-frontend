@@ -58,6 +58,8 @@ class _LoginPageState extends State<LoginPage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              Image.asset('assets/logo.jpeg', height: 80),
+              const SizedBox(height: 20),
               Text(
                 "Welcome Back 👋",
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: Colors.lightBlue.shade700, fontWeight: FontWeight.bold),
@@ -114,6 +116,8 @@ class _LoginPageState extends State<LoginPage> {
                   TextButton(onPressed: () => context.navigateToNextPage(MyApp.routeRegister), child: const Text("Register")),
                 ],
               ),
+              const SizedBox(height: 16),
+              Align(alignment: Alignment.center, child: const Text("You will be created as a staff.", style: TextStyle(fontSize: 12))),
             ],
           ),
         ),

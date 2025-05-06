@@ -2,19 +2,23 @@ class ClassesVO {
   final int id;
   final String className;
   final String classDescription;
-  final String classDuration;
+  final String startTime;
+  final String endTime;
+  final int durationMonths;
+  final int maxStudents;
+  final String classLevel;
   final int teacherId;
-  final String roomNumber;
-  final String remark;
 
   ClassesVO({
     required this.id,
     required this.className,
     required this.classDescription,
-    required this.classDuration,
+    required this.startTime,
+    required this.endTime,
+    required this.durationMonths,
+    required this.maxStudents,
+    required this.classLevel,
     required this.teacherId,
-    required this.roomNumber,
-    required this.remark,
   });
 
   factory ClassesVO.fromJson(Map<String, dynamic> json) {
@@ -22,10 +26,12 @@ class ClassesVO {
       id: json['id'],
       className: json['class_name'],
       classDescription: json['class_description'],
-      classDuration: json['class_duration'],
+      startTime: json['start_time'],
+      endTime: json['end_time'],
+      durationMonths: json['duration_months'],
+      maxStudents: json['max_students'],
+      classLevel: json['class_level'],
       teacherId: json['teacher_id'],
-      roomNumber: json['room_number'],
-      remark: json['remark'],
     );
   }
 
@@ -34,10 +40,12 @@ class ClassesVO {
       'id': id,
       'class_name': className,
       'class_description': classDescription,
-      'class_duration': classDuration,
+      'start_time': startTime,
+      'end_time': endTime,
+      'duration_months': durationMonths,
+      'max_students': maxStudents,
+      'class_level': classLevel,
       'teacher_id': teacherId,
-      'room_number': roomNumber,
-      'remark': remark,
     };
   }
 }

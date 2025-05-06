@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sms_frontend/data/vos/teacher_vo.dart';
 import 'package:sms_frontend/network/service/school_api_service.dart';
+import 'package:sms_frontend/utils/extensions/navigation_extensions.dart';
 
 class ManageTeachersPage extends StatefulWidget {
   const ManageTeachersPage({super.key});
@@ -47,6 +48,8 @@ class _ManageTeachersPageState extends State<ManageTeachersPage> {
     final phoneController = TextEditingController(text: teacher?.phone ?? '');
     final specializationController = TextEditingController(text: teacher?.specialization ?? '');
     final joinedDateController = TextEditingController(text: initialDate);
+    final genderController = TextEditingController(text: teacher?.gender ?? '');
+    final addressController = TextEditingController(text: teacher?.address ?? '');
 
     showDialog(
       context: context,
@@ -63,6 +66,8 @@ class _ManageTeachersPageState extends State<ManageTeachersPage> {
                     TextField(controller: emailController, decoration: const InputDecoration(labelText: 'Email')),
                     TextField(controller: phoneController, decoration: const InputDecoration(labelText: 'Phone')),
                     TextField(controller: specializationController, decoration: const InputDecoration(labelText: 'Specialization')),
+                    TextField(controller: genderController, decoration: const InputDecoration(labelText: 'Gender')),
+                    TextField(controller: addressController, decoration: const InputDecoration(labelText: 'Address')),
                     TextField(
                       controller: joinedDateController,
                       readOnly: true,
@@ -95,6 +100,8 @@ class _ManageTeachersPageState extends State<ManageTeachersPage> {
                       'email': emailController.text,
                       'phone': phoneController.text,
                       'specialization': specializationController.text,
+                      'gender': genderController.text,
+                      'address': addressController.text,
                       'joined_date': joinedDateController.text,
                     }..removeWhere((key, value) => value == null);
 
@@ -103,8 +110,10 @@ class _ManageTeachersPageState extends State<ManageTeachersPage> {
                     } else {
                       await _api.updateTeacher(data);
                     }
+                    if (mounted) {
+                      context.navigateBack();
+                    }
 
-                    Navigator.pop(context);
                     _loadTeachers();
                   } catch (e) {
                     _showError(e.toString());
