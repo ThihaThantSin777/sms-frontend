@@ -208,8 +208,9 @@ class _ManageClassesPageState extends State<ManageClassesPage> {
                                                   phone: '',
                                                   specialization: '',
                                                   joinedDate: '',
-                                                  address: '',
-                                                  gender: '',
+                                                  experienceYears: 0,
+                                                  qualification: '',
+                                                  status: '',
                                                 ),
                                           )
                                           .name)

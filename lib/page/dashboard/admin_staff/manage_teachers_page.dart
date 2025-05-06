@@ -48,9 +48,9 @@ class _ManageTeachersPageState extends State<ManageTeachersPage> {
     final phoneController = TextEditingController(text: teacher?.phone ?? '');
     final specializationController = TextEditingController(text: teacher?.specialization ?? '');
     final joinedDateController = TextEditingController(text: initialDate);
-    final genderController = TextEditingController(text: teacher?.gender ?? '');
-    final addressController = TextEditingController(text: teacher?.address ?? '');
-
+    final passwordController = TextEditingController();
+    final qualificationController = TextEditingController(text: teacher?.qualification ?? '');
+    final experienceYearsController = TextEditingController(text: teacher?.experienceYears.toString());
     showDialog(
       context: context,
       builder:
@@ -64,10 +64,16 @@ class _ManageTeachersPageState extends State<ManageTeachersPage> {
                   children: [
                     TextField(controller: nameController, decoration: const InputDecoration(labelText: 'Name')),
                     TextField(controller: emailController, decoration: const InputDecoration(labelText: 'Email')),
+                    if (teacher == null)
+                      TextField(
+                        controller: passwordController,
+                        obscureText: true,
+                        decoration: const InputDecoration(labelText: 'Password'),
+                      ),
+                    TextField(controller: qualificationController, decoration: const InputDecoration(labelText: 'Qualification')),
+                    TextField(controller: experienceYearsController, decoration: const InputDecoration(labelText: 'Experience Years')),
                     TextField(controller: phoneController, decoration: const InputDecoration(labelText: 'Phone')),
                     TextField(controller: specializationController, decoration: const InputDecoration(labelText: 'Specialization')),
-                    TextField(controller: genderController, decoration: const InputDecoration(labelText: 'Gender')),
-                    TextField(controller: addressController, decoration: const InputDecoration(labelText: 'Address')),
                     TextField(
                       controller: joinedDateController,
                       readOnly: true,
@@ -95,14 +101,16 @@ class _ManageTeachersPageState extends State<ManageTeachersPage> {
                 onPressed: () async {
                   try {
                     final data = {
-                      'id': teacher?.id,
                       'name': nameController.text,
                       'email': emailController.text,
                       'phone': phoneController.text,
+                      'password': teacher == null ? passwordController.text : null, // only when creating
+                      'role': 'teacher',
                       'specialization': specializationController.text,
-                      'gender': genderController.text,
-                      'address': addressController.text,
                       'joined_date': joinedDateController.text,
+                      'qualification': qualificationController.text,
+                      'experience_years': experienceYearsController.text,
+                      'status': 'active',
                     }..removeWhere((key, value) => value == null);
 
                     if (teacher == null) {

@@ -4,9 +4,10 @@ class TeachersVO {
   final String email;
   final String phone;
   final String specialization;
-  final String gender;
-  final String address;
   final String joinedDate;
+  final String qualification;
+  final int experienceYears;
+  final String status;
 
   TeachersVO({
     required this.id,
@@ -14,8 +15,9 @@ class TeachersVO {
     required this.email,
     required this.phone,
     required this.specialization,
-    required this.gender,
-    required this.address,
+    required this.qualification,
+    required this.experienceYears,
+    required this.status,
     required this.joinedDate,
   });
 
@@ -26,8 +28,9 @@ class TeachersVO {
       email: json['email'],
       phone: json['phone'],
       specialization: json['specialization'],
-      gender: json['gender'],
-      address: json['address'],
+      qualification: json['qualification'],
+      experienceYears: json['experience_years'],
+      status: json['status'],
       joinedDate: json['joined_date'],
     );
   }
@@ -39,8 +42,9 @@ class TeachersVO {
       'email': email,
       'phone': phone,
       'specialization': specialization,
-      'gender': gender,
-      'address': address,
+      'qualification': qualification,
+      'experienceYears': experienceYears,
+      'status': status,
       'joined_date': joinedDate,
     };
   }

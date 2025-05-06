@@ -76,9 +76,11 @@ class _DashboardPageState extends State<DashboardPage> {
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       color: Colors.lightBlue.shade100,
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text("📊 Dashboard", style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
+          Image.asset('assets/logo.jpeg', height: 20),
+          const SizedBox(width: 20),
+          Text("Dashboard", style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
+          Spacer(),
           Row(
             children: [
               if (_currentUser != null)
@@ -144,10 +146,11 @@ class _DashboardPageState extends State<DashboardPage> {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
         children: [
-          if (_currentUser?.role == 'admin') _buildStatCard("Users", Icons.supervisor_account, userCount, Colors.purple.shade400),
+          if (_currentUser?.role == 'admin')
+            _buildStatCard(_currentUser?.role == 'admin' ? "Admin" : "Staff", Icons.supervisor_account, userCount, Colors.purple.shade400),
           if (_currentUser?.role == 'admin') _buildStatCard("Teachers", Icons.school, teacherCount, Colors.orange.shade400),
-          _buildStatCard("Students", Icons.group, studentCount, Colors.green.shade400),
-          _buildStatCard("Classes", Icons.class_, classCount, Colors.blue.shade300),
+          if (_currentUser?.role == 'admin') _buildStatCard("Students", Icons.group, studentCount, Colors.green.shade400),
+          if (_currentUser?.role == 'admin') _buildStatCard("Classes", Icons.class_, classCount, Colors.blue.shade300),
         ],
       ),
     );
@@ -167,8 +170,9 @@ class _DashboardPageState extends State<DashboardPage> {
               children: [
                 const Text("System Overview", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
                 const SizedBox(height: 12),
-                AspectRatio(
-                  aspectRatio: 1.3,
+                SizedBox(
+                  width: 300,
+                  height: 300,
                   child: PieChart(PieChartData(sections: pieSections, sectionsSpace: 4, centerSpaceRadius: 40)),
                 ),
               ],
@@ -194,9 +198,6 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget _buildDashboardContent(double width) {
     return Column(
       children: [
-        const SizedBox(height: 20),
-        Image.asset('assets/logo.jpeg', height: 80),
-        const SizedBox(height: 8),
         _buildTopBar(),
         Expanded(
           child:
@@ -208,7 +209,7 @@ class _DashboardPageState extends State<DashboardPage> {
                       _buildStatCardsRow(),
                       _buildPieChart(),
                       if (_currentUser?.role == 'admin')
-                        _buildNavCard("Manage Users", Icons.supervisor_account, () {
+                        _buildNavCard("Manage Staff", Icons.supervisor_account, () {
                           context.navigateToNextPage(MyApp.routeManageUser);
                         }),
                       if (_currentUser?.role == 'admin')
@@ -235,12 +236,14 @@ class _DashboardPageState extends State<DashboardPage> {
                         _buildNavCard("Available Classes", Icons.list_alt, () {
                           context.navigateToNextPage(MyApp.routeStudentApplyClass);
                         }),
-                      _buildNavCard("Manage Students", Icons.group, () {
-                        context.navigateToNextPage(MyApp.routeManageStudents);
-                      }),
-                      _buildNavCard("Manage Classes", Icons.class_, () {
-                        context.navigateToNextPage(MyApp.routeManageClasses);
-                      }),
+                      if (_currentUser?.role == 'admin' || _currentUser?.role == 'staff')
+                        _buildNavCard("Manage Students", Icons.group, () {
+                          context.navigateToNextPage(MyApp.routeManageStudents);
+                        }),
+                      if (_currentUser?.role == 'admin' || _currentUser?.role == 'staff')
+                        _buildNavCard("Manage Classes", Icons.class_, () {
+                          context.navigateToNextPage(MyApp.routeManageClasses);
+                        }),
                     ],
                   ),
         ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sms_frontend/data/vos/classes_vo.dart';
 import 'package:sms_frontend/network/service/school_api_service.dart';
+import 'package:sms_frontend/utils/extensions/snack_bar_extensions.dart';
 
 class StudentApplyClassesPage extends StatefulWidget {
   const StudentApplyClassesPage({super.key});
@@ -13,7 +14,6 @@ class _StudentApplyClassesPageState extends State<StudentApplyClassesPage> {
   final _api = SchoolApiService();
   List<ClassesVO> _classes = [];
   bool _isLoading = true;
-  final Set<int> _appliedClassIds = {};
 
   @override
   void initState() {
@@ -31,21 +31,13 @@ class _StudentApplyClassesPageState extends State<StudentApplyClassesPage> {
       });
     } catch (e) {
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Failed to load classes: $e")));
+      if (mounted) {
+        context.showErrorSnackBar("Failed to load classes: $e");
+      }
     }
   }
 
-  void _applyToClass(int classId) {
-    setState(() {
-      _appliedClassIds.add(classId);
-    });
-
-    // Optionally: call an API to save application to backend.
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Applied to class ID: $classId")));
-  }
-
   Widget _buildClassCard(ClassesVO cls) {
-    final isApplied = _appliedClassIds.contains(cls.id);
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -59,11 +51,6 @@ class _StudentApplyClassesPageState extends State<StudentApplyClassesPage> {
             Text("Level: ${cls.classLevel}"),
             Text("Duration: ${cls.durationMonths} months"),
           ],
-        ),
-        trailing: ElevatedButton(
-          onPressed: isApplied ? null : () => _applyToClass(cls.id),
-          style: ElevatedButton.styleFrom(backgroundColor: isApplied ? Colors.grey : Colors.blue),
-          child: Text(isApplied ? 'Applied' : 'Apply'),
         ),
       ),
     );

@@ -116,7 +116,7 @@ class _LoginPageState extends State<LoginPage> {
                   TextButton(onPressed: () => context.navigateToNextPage(MyApp.routeRegister), child: const Text("Register")),
                 ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 5),
               Align(alignment: Alignment.center, child: const Text("You will be created as a staff.", style: TextStyle(fontSize: 12))),
             ],
           ),

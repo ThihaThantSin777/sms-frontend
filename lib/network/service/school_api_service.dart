@@ -21,7 +21,6 @@ class SchoolApiService {
 
       // Parse user VO
       final user = UserVO.fromJson(data['data']);
-
       // Save to SharedPreferences
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('user_id', user.id.toString());
@@ -30,6 +29,7 @@ class SchoolApiService {
       await prefs.setString('user_phone', user.phone);
       await prefs.setString('user_role', user.role);
       await prefs.setString('user_create_at', user.createdAt);
+      await prefs.setString('user_status', user.role);
 
       return user;
     } catch (e) {
@@ -46,6 +46,7 @@ class SchoolApiService {
     await prefs.remove('user_email');
     await prefs.remove('user_role');
     await prefs.remove('user_create_at');
+    await prefs.remove('user_status');
   }
 
   // -------------------- USERS --------------------
@@ -70,9 +71,18 @@ class SchoolApiService {
       final email = prefs.getString('user_email');
       final role = prefs.getString('user_role');
       final createdAt = prefs.getString('user_create_at');
+      final status = prefs.getString('user_status');
 
       if (id != null && name != null && email != null && role != null) {
-        return UserVO(id: int.tryParse(id) ?? 0, name: name, email: email, phone: phone ?? '', role: role, createdAt: createdAt ?? "");
+        return UserVO(
+          id: int.tryParse(id) ?? 0,
+          name: name,
+          email: email,
+          phone: phone ?? '',
+          role: role,
+          createdAt: createdAt ?? "",
+          status: status ?? '',
+        );
       }
 
       return null;
@@ -101,7 +111,10 @@ class SchoolApiService {
       final response = await _dio.get('/students/read_student.php');
       return BaseResponse<List<StudentVO>>.fromJson(
             response.data,
-            (json) => (json as List).map((e) => StudentVO.fromJson(e)).toList(),
+            (json) =>
+                (json as List).map((e) {
+                  return StudentVO.fromJson(e);
+                }).toList(),
           ).data ??
           [];
     } catch (e) {
@@ -129,7 +142,10 @@ class SchoolApiService {
       final response = await _dio.get('/teachers/read_teacher.php');
       return BaseResponse<List<TeachersVO>>.fromJson(
             response.data,
-            (json) => (json as List).map((e) => TeachersVO.fromJson(e)).toList(),
+            (json) =>
+                (json as List).map((e) {
+                  return TeachersVO.fromJson(e);
+                }).toList(),
           ).data ??
           [];
     } catch (e) {

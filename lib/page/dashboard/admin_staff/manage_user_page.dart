@@ -46,6 +46,7 @@ class _ManageUserPageState extends State<ManageUserPage> {
     final phoneController = TextEditingController(text: user?.phone ?? '');
     final passwordController = TextEditingController();
     String role = user?.role ?? 'staff';
+    String status = user?.status ?? 'active';
 
     showDialog(
       context: context,
@@ -67,9 +68,20 @@ class _ManageUserPageState extends State<ManageUserPage> {
                     items: const [
                       DropdownMenuItem(value: 'admin', child: Text('Admin')),
                       DropdownMenuItem(value: 'staff', child: Text('Staff')),
+                      DropdownMenuItem(value: 'teacher', child: Text('Teacher')),
+                      DropdownMenuItem(value: 'student', child: Text('Student')),
                     ],
                     onChanged: (value) => role = value!,
                     decoration: const InputDecoration(labelText: 'Role'),
+                  ),
+                  DropdownButtonFormField<String>(
+                    value: status,
+                    items: const [
+                      DropdownMenuItem(value: 'active', child: Text('Active')),
+                      DropdownMenuItem(value: 'inactive', child: Text('Inactive')),
+                    ],
+                    onChanged: (value) => status = value!,
+                    decoration: const InputDecoration(labelText: 'Status'),
                   ),
                 ],
               ),
@@ -86,6 +98,7 @@ class _ManageUserPageState extends State<ManageUserPage> {
                       'phone': phoneController.text,
                       if (user == null) 'password': passwordController.text,
                       'role': role,
+                      'status': status,
                     }..removeWhere((key, value) => value == null);
 
                     if (user == null) {
@@ -94,7 +107,7 @@ class _ManageUserPageState extends State<ManageUserPage> {
                       await _api.updateUser(data);
                     }
 
-                    if (mounted) {
+                    if (context.mounted) {
                       context.navigateBack();
                     }
                     _loadUsers();

@@ -103,7 +103,11 @@ class _ManageStudentsPageState extends State<ManageStudentsPage> {
     final nameController = TextEditingController(text: student?.name ?? '');
     final emailController = TextEditingController(text: student?.email ?? '');
     final phoneController = TextEditingController(text: student?.phone ?? '');
+    final addressController = TextEditingController(text: student?.address ?? '');
+    final guardianNameController = TextEditingController(text: student?.guardianName ?? '');
     final dateOfBirthController = TextEditingController(text: student?.dateOfBirth ?? DateFormat('yyyy-MM-dd').format(DateTime.now()));
+    final passwordController = TextEditingController(); // 👈 For new student password input
+    String gender = student?.gender ?? 'Male';
 
     int? selectedClassId = student?.classId;
     String selectedClassName =
@@ -141,6 +145,12 @@ class _ManageStudentsPageState extends State<ManageStudentsPage> {
                           TextField(controller: nameController, decoration: const InputDecoration(labelText: 'Name')),
                           TextField(controller: emailController, decoration: const InputDecoration(labelText: 'Email')),
                           TextField(controller: phoneController, decoration: const InputDecoration(labelText: 'Phone')),
+                          if (student == null)
+                            TextField(
+                              controller: passwordController,
+                              decoration: const InputDecoration(labelText: 'Password'),
+                              obscureText: true,
+                            ),
                           TextField(
                             controller: dateOfBirthController,
                             readOnly: true,
@@ -157,6 +167,28 @@ class _ManageStudentsPageState extends State<ManageStudentsPage> {
                               }
                             },
                           ),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: RadioListTile<String>(
+                                  title: const Text('Male'),
+                                  value: 'Male',
+                                  groupValue: gender,
+                                  onChanged: (val) => setState(() => gender = val!),
+                                ),
+                              ),
+                              Expanded(
+                                child: RadioListTile<String>(
+                                  title: const Text('Female'),
+                                  value: 'Female',
+                                  groupValue: gender,
+                                  onChanged: (val) => setState(() => gender = val!),
+                                ),
+                              ),
+                            ],
+                          ),
+                          TextField(controller: addressController, decoration: const InputDecoration(labelText: 'Address')),
+                          TextField(controller: guardianNameController, decoration: const InputDecoration(labelText: 'Guardian Name')),
                           SizedBox(
                             width: double.infinity,
                             child: TextButton.icon(
@@ -184,13 +216,16 @@ class _ManageStudentsPageState extends State<ManageStudentsPage> {
                       onPressed: () async {
                         try {
                           final data = {
-                            'id': student?.id,
                             'name': nameController.text,
                             'email': emailController.text,
                             'phone': phoneController.text,
+                            if (student == null) 'password': passwordController.text,
                             'date_of_birth': dateOfBirthController.text,
                             'class_id': selectedClassId.toString(),
-                          }..removeWhere((key, value) => value == null);
+                            'gender': gender,
+                            'address': addressController.text,
+                            'guardian_name': guardianNameController.text,
+                          };
 
                           if (student == null) {
                             await _api.createStudent(data);
