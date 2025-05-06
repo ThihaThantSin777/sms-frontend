@@ -29,7 +29,7 @@ class SchoolApiService {
       await prefs.setString('user_phone', user.phone);
       await prefs.setString('user_role', user.role);
       await prefs.setString('user_create_at', user.createdAt);
-      await prefs.setString('user_status', user.role);
+      await prefs.setString('user_status', user.status);
 
       return user;
     } catch (e) {

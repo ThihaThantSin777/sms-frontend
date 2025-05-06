@@ -104,6 +104,7 @@ class _ManageClassesPageState extends State<ManageClassesPage> {
     final durationController = TextEditingController(text: classVO?.durationMonths.toString() ?? '');
     final maxStudentsController = TextEditingController(text: classVO?.maxStudents.toString() ?? '');
     String classLevel = classVO?.classLevel ?? 'Beginner';
+    String status = classVO?.status.toLowerCase() ?? 'active';
 
     TimeOfDay? localStartTime;
     TimeOfDay? localEndTime;
@@ -204,6 +205,12 @@ class _ManageClassesPageState extends State<ManageClassesPage> {
                                 ].map((level) => DropdownMenuItem(value: level, child: Text(level))).toList(),
                             onChanged: (val) => setState(() => classLevel = val ?? 'Beginner'),
                           ),
+                          DropdownButtonFormField<String>(
+                            decoration: const InputDecoration(labelText: 'Status *'),
+                            value: status,
+                            items: ['active', 'inactive'].map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
+                            onChanged: (val) => setState(() => status = val ?? 'active'),
+                          ),
                           SizedBox(
                             width: double.infinity,
                             child: TextButton.icon(
@@ -273,6 +280,7 @@ class _ManageClassesPageState extends State<ManageClassesPage> {
                             'max_students': maxStudentsController.text,
                             'class_level': classLevel,
                             'teacher_id': selectedTeacherId.toString(),
+                            'status': status,
                           }..removeWhere((k, v) => v == null || v.toString().isEmpty);
 
                           if (classVO == null) {
@@ -299,23 +307,40 @@ class _ManageClassesPageState extends State<ManageClassesPage> {
     );
   }
 
-  void _deleteClass(int id) async {
+  void _deactivateClass(ClassesVO classes) async {
+    final isCurrentlyActive = classes.status.toLowerCase() == 'active';
+    final newStatus = isCurrentlyActive ? 'inactive' : 'active';
+    final actionLabel = isCurrentlyActive ? 'Deactivate' : 'Activate';
+
     final confirm = await showDialog(
       context: context,
       builder:
           (_) => AlertDialog(
-            title: const Text('Confirm Delete'),
-            content: const Text('Are you sure you want to delete this class?'),
+            title: Text('Confirm $actionLabel'),
+            content: Text('Are you sure you want to $actionLabel this class?'),
             actions: [
               TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-              ElevatedButton(onPressed: () => Navigator.pop(context, true), child: const Text('Delete')),
+              ElevatedButton(onPressed: () => Navigator.pop(context, true), child: Text(actionLabel)),
             ],
           ),
     );
 
     if (confirm == true) {
       try {
-        await _api.deleteClass(id);
+        final data = {
+          'id': classes.id,
+          'class_name': classes.className,
+          'class_description': classes.classDescription,
+          'start_time': classes.startTime,
+          'end_time': classes.endTime,
+          'duration_months': classes.durationMonths,
+          'max_students': classes.maxStudents,
+          'class_level': classes.classLevel,
+          'teacher_id': classes.teacherId,
+          'status': newStatus,
+        }..removeWhere((k, v) => v.toString().isEmpty);
+
+        await _api.updateClass(data);
         _loadData();
       } catch (e) {
         if (mounted) {
@@ -356,16 +381,44 @@ class _ManageClassesPageState extends State<ManageClassesPage> {
                 separatorBuilder: (_, __) => const Divider(height: 1),
                 itemBuilder: (_, index) {
                   final classVO = _classes[index];
-                  return ListTile(
-                    leading: CircleAvatar(child: Text(classVO.className[0].toUpperCase())),
-                    title: Text(classVO.className),
-                    subtitle: Text("${classVO.classDescription} | Duration: ${classVO.durationMonths} month(s)"),
-                    trailing: Wrap(
-                      spacing: 8,
-                      children: [
-                        IconButton(icon: const Icon(Icons.edit), onPressed: () => _showClassFormDialog(classVO: classVO)),
-                        IconButton(icon: const Icon(Icons.delete), onPressed: () => _deleteClass(classVO.id)),
-                      ],
+                  final isInactive = classVO.status.toLowerCase() == 'inactive';
+
+                  return Container(
+                    color: isInactive ? Colors.grey.shade100 : null,
+                    child: ListTile(
+                      leading: CircleAvatar(
+                        backgroundColor: isInactive ? Colors.grey : Colors.blue,
+                        child: Text(classVO.className[0].toUpperCase(), style: TextStyle(color: Colors.white)),
+                      ),
+                      title: Text(
+                        classVO.className,
+                        style: TextStyle(
+                          color: isInactive ? Colors.grey : Colors.black,
+                          fontStyle: isInactive ? FontStyle.italic : FontStyle.normal,
+                        ),
+                      ),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text("${classVO.classDescription} | Duration: ${classVO.durationMonths} month(s)"),
+                          if (isInactive)
+                            const Text('INACTIVE', style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold, fontSize: 12)),
+                        ],
+                      ),
+                      trailing: Wrap(
+                        spacing: 8,
+                        children: [
+                          IconButton(icon: const Icon(Icons.edit), onPressed: () => _showClassFormDialog(classVO: classVO)),
+                          IconButton(
+                            icon: Icon(
+                              classVO.status.toLowerCase() == 'inactive' ? Icons.check_circle : Icons.block,
+                              color: classVO.status.toLowerCase() == 'inactive' ? Colors.green : Colors.red,
+                            ),
+                            tooltip: classVO.status.toLowerCase() == 'inactive' ? 'Activate' : 'Deactivate',
+                            onPressed: () => _deactivateClass(classVO),
+                          ),
+                        ],
+                      ),
                     ),
                   );
                 },

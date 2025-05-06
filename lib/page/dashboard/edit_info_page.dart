@@ -1,8 +1,9 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sms_frontend/main.dart';
 import 'package:sms_frontend/network/service/school_api_service.dart';
+import 'package:sms_frontend/utils/extensions/navigation_extensions.dart';
+import 'package:sms_frontend/utils/extensions/snack_bar_extensions.dart';
 
 class EditInfoPage extends StatefulWidget {
   const EditInfoPage({super.key});
@@ -38,25 +39,47 @@ class _EditInfoPageState extends State<EditInfoPage> {
 
     setState(() => _isLoading = true);
 
-    final prefs = await SharedPreferences.getInstance();
-    final userDataString = prefs.getString('user_data');
-    if (userDataString == null) return;
-
-    final user = json.decode(userDataString);
-    user['name'] = _nameController.text;
-    user['email'] = _emailController.text;
-
-    if (_passwordController.text.isNotEmpty) {
-      user['password'] = _passwordController.text; // Note: Only store password locally if required
+    final userData = await SchoolApiService().getLoginUser();
+    if (userData == null) {
+      setState(() => _isLoading = false);
+      if (mounted) {
+        context.showErrorSnackBar("User not found");
+      }
+      return;
     }
 
-    await prefs.setString('user_data', json.encode(user));
+    final updatedPassword = {"id": userData.id.toString(), if (_passwordController.text.isNotEmpty) "password": _passwordController.text};
+
+    final updatedData = {
+      "id": userData.id.toString(),
+      "name": _nameController.text,
+      "email": _emailController.text,
+      "phone": userData.phone,
+      "role": userData.role,
+      "status": userData.status,
+      if (_passwordController.text.isNotEmpty) "password": _passwordController.text,
+    };
+
+    try {
+      await SchoolApiService().updateUser(updatedPassword);
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('user_id', updatedData["id"] ?? '');
+      await prefs.setString('user_name', updatedData["name"] ?? '');
+      await prefs.setString('user_email', updatedData["email"] ?? '');
+      await prefs.setString('user_phone', updatedData["phone"] ?? '');
+      await prefs.setString('user_role', updatedData["role"] ?? '');
+      await prefs.setString('user_status', updatedData["status"] ?? '');
+
+      if (mounted) {
+        context.showSuccessSnackBar('Info updated successfully');
+        context.navigateToNextPageWithRemoveUntil(MyApp.routeLogin);
+      }
+    } catch (e) {
+      if (mounted) context.showErrorSnackBar(e.toString());
+    }
 
     setState(() => _isLoading = false);
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Info updated successfully'), backgroundColor: Colors.green));
-    }
   }
 
   @override
@@ -86,7 +109,14 @@ class _EditInfoPageState extends State<EditInfoPage> {
                         controller: _passwordController,
                         decoration: const InputDecoration(labelText: 'New Password (optional)'),
                         obscureText: true,
+                        validator: (value) {
+                          if (value != null && value.isNotEmpty && value.length < 8) {
+                            return 'Password must be at least 8 characters';
+                          }
+                          return null;
+                        },
                       ),
+
                       const SizedBox(height: 20),
                       ElevatedButton.icon(onPressed: _saveUserData, icon: const Icon(Icons.save), label: const Text('Save')),
                     ],

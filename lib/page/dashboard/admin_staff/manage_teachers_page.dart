@@ -144,7 +144,6 @@ class _ManageTeachersPageState extends State<ManageTeachersPage> {
                         'joined_date': joinedDateController.text,
                         'qualification': qualificationController.text,
                         'experience_years': experienceYearsController.text,
-                        'status': 'active',
                       }..removeWhere((key, value) => value == null);
 
                       if (teacher == null) {
@@ -165,30 +164,6 @@ class _ManageTeachersPageState extends State<ManageTeachersPage> {
             ],
           ),
     );
-  }
-
-  void _deleteTeacher(int id) async {
-    final confirm = await showDialog(
-      context: context,
-      builder:
-          (_) => AlertDialog(
-            title: const Text('Confirm Delete'),
-            content: const Text('Are you sure you want to delete this teacher?'),
-            actions: [
-              TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-              ElevatedButton(onPressed: () => Navigator.pop(context, true), child: const Text('Delete')),
-            ],
-          ),
-    );
-
-    if (confirm == true) {
-      try {
-        await _api.deleteTeacher(id);
-        _loadTeachers();
-      } catch (e) {
-        _showError(e.toString());
-      }
-    }
   }
 
   Widget _buildTeacherList() {
@@ -232,10 +207,7 @@ class _ManageTeachersPageState extends State<ManageTeachersPage> {
                     subtitle: Text("${teacher.specialization} | ${teacher.email}"),
                     trailing: Wrap(
                       spacing: 8,
-                      children: [
-                        IconButton(icon: const Icon(Icons.edit), onPressed: () => _showTeacherFormDialog(teacher: teacher)),
-                        IconButton(icon: const Icon(Icons.delete), onPressed: () => _deleteTeacher(teacher.id)),
-                      ],
+                      children: [IconButton(icon: const Icon(Icons.edit), onPressed: () => _showTeacherFormDialog(teacher: teacher))],
                     ),
                   );
                 },

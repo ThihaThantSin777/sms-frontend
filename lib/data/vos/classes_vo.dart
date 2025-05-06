@@ -8,6 +8,7 @@ class ClassesVO {
   final int maxStudents;
   final String classLevel;
   final int teacherId;
+  final String status;
 
   ClassesVO({
     required this.id,
@@ -19,6 +20,7 @@ class ClassesVO {
     required this.maxStudents,
     required this.classLevel,
     required this.teacherId,
+    required this.status,
   });
 
   factory ClassesVO.fromJson(Map<String, dynamic> json) {
@@ -32,6 +34,7 @@ class ClassesVO {
       maxStudents: json['max_students'],
       classLevel: json['class_level'],
       teacherId: json['teacher_id'],
+      status: json['status'],
     );
   }
 
@@ -46,6 +49,7 @@ class ClassesVO {
       'max_students': maxStudents,
       'class_level': classLevel,
       'teacher_id': teacherId,
+      'status': status,
     };
   }
 }

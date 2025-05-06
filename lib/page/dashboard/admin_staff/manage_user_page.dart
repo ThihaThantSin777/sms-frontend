@@ -148,23 +148,29 @@ class _ManageUserPageState extends State<ManageUserPage> {
     );
   }
 
-  void _deleteUser(int id) async {
+  void _toggleUserStatus(UserVO user) async {
+    final isActive = user.status.toLowerCase() == 'active';
+    final newStatus = isActive ? 'inactive' : 'active';
+    final actionLabel = isActive ? 'Deactivate' : 'Activate';
+
     final confirm = await showDialog(
       context: context,
       builder:
           (_) => AlertDialog(
-            title: const Text('Confirm Delete'),
-            content: const Text('Are you sure you want to delete this user?'),
+            title: Text('Confirm $actionLabel'),
+            content: Text('Are you sure you want to $actionLabel this user?'),
             actions: [
               TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-              ElevatedButton(onPressed: () => Navigator.pop(context, true), child: const Text('Delete')),
+              ElevatedButton(onPressed: () => Navigator.pop(context, true), child: Text(actionLabel)),
             ],
           ),
     );
 
     if (confirm == true) {
       try {
-        await _api.deleteUser(id);
+        final data = {'id': user.id, 'name': user.name, 'email': user.email, 'phone': user.phone, 'role': user.role, 'status': newStatus};
+
+        await _api.updateUser(data);
         _loadUsers();
       } catch (e) {
         _showError(e.toString());
@@ -211,7 +217,14 @@ class _ManageUserPageState extends State<ManageUserPage> {
                       spacing: 8,
                       children: [
                         IconButton(icon: const Icon(Icons.edit), onPressed: () => _showUserFormDialog(user: user)),
-                        IconButton(icon: const Icon(Icons.delete), onPressed: () => _deleteUser(user.id)),
+                        IconButton(
+                          icon: Icon(
+                            user.status.toLowerCase() == 'active' ? Icons.block : Icons.check_circle,
+                            color: user.status.toLowerCase() == 'active' ? Colors.red : Colors.green,
+                          ),
+                          tooltip: user.status.toLowerCase() == 'active' ? 'Deactivate' : 'Activate',
+                          onPressed: () => _toggleUserStatus(user),
+                        ),
                       ],
                     ),
                   );

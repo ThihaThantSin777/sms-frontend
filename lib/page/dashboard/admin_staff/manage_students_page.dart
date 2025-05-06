@@ -127,6 +127,7 @@ class _ManageStudentsPageState extends State<ManageStudentsPage> {
                     maxStudents: 0,
                     classLevel: '',
                     teacherId: 0,
+                    status: '',
                   ),
             )
             .className;
@@ -286,30 +287,6 @@ class _ManageStudentsPageState extends State<ManageStudentsPage> {
     );
   }
 
-  void _deleteStudent(int id) async {
-    final confirm = await showDialog(
-      context: context,
-      builder:
-          (_) => AlertDialog(
-            title: const Text('Confirm Delete'),
-            content: const Text('Are you sure you want to delete this student?'),
-            actions: [
-              TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-              ElevatedButton(onPressed: () => Navigator.pop(context, true), child: const Text('Delete')),
-            ],
-          ),
-    );
-
-    if (confirm == true) {
-      try {
-        await _api.deleteStudent(id);
-        _loadStudents();
-      } catch (e) {
-        _showError(e.toString());
-      }
-    }
-  }
-
   Widget _buildStudentList() {
     return Card(
       margin: const EdgeInsets.all(16),
@@ -351,10 +328,7 @@ class _ManageStudentsPageState extends State<ManageStudentsPage> {
                     subtitle: Text("${student.email} | ${student.phone}"),
                     trailing: Wrap(
                       spacing: 8,
-                      children: [
-                        IconButton(icon: const Icon(Icons.edit), onPressed: () => _showStudentFormDialog(student: student)),
-                        IconButton(icon: const Icon(Icons.delete), onPressed: () => _deleteStudent(student.id)),
-                      ],
+                      children: [IconButton(icon: const Icon(Icons.edit), onPressed: () => _showStudentFormDialog(student: student))],
                     ),
                   );
                 },
