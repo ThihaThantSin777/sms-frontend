@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sms_frontend/data/vos/classes_vo.dart';
 import 'package:sms_frontend/network/service/school_api_service.dart';
+import 'package:sms_frontend/utils/extensions/snack_bar_extensions.dart';
 
 class StudentClassSchedulePage extends StatefulWidget {
   const StudentClassSchedulePage({super.key});
@@ -30,7 +31,9 @@ class _StudentClassSchedulePageState extends State<StudentClassSchedulePage> {
       });
     } catch (e) {
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to load class schedules: $e')));
+      if (mounted) {
+        context.showErrorSnackBar('Failed to load class schedules: $e');
+      }
     }
   }
 

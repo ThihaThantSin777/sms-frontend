@@ -41,6 +41,8 @@ class _ManageUserPageState extends State<ManageUserPage> {
   }
 
   void _showUserFormDialog({UserVO? user}) {
+    final formKey = GlobalKey<FormState>();
+
     final nameController = TextEditingController(text: user?.name ?? '');
     final emailController = TextEditingController(text: user?.email ?? '');
     final phoneController = TextEditingController(text: user?.phone ?? '');
@@ -55,64 +57,88 @@ class _ManageUserPageState extends State<ManageUserPage> {
             title: Text(user == null ? 'Add User' : 'Edit User'),
             content: SizedBox(
               width: 400,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(controller: nameController, decoration: const InputDecoration(labelText: 'Name')),
-                  TextField(controller: emailController, decoration: const InputDecoration(labelText: 'Email')),
-                  TextField(controller: phoneController, decoration: const InputDecoration(labelText: 'Phone')),
-                  if (user == null)
-                    TextField(controller: passwordController, decoration: const InputDecoration(labelText: 'Password'), obscureText: true),
-                  DropdownButtonFormField<String>(
-                    value: role,
-                    items: const [
-                      DropdownMenuItem(value: 'admin', child: Text('Admin')),
-                      DropdownMenuItem(value: 'staff', child: Text('Staff')),
-                      DropdownMenuItem(value: 'teacher', child: Text('Teacher')),
-                      DropdownMenuItem(value: 'student', child: Text('Student')),
-                    ],
-                    onChanged: (value) => role = value!,
-                    decoration: const InputDecoration(labelText: 'Role'),
-                  ),
-                  DropdownButtonFormField<String>(
-                    value: status,
-                    items: const [
-                      DropdownMenuItem(value: 'active', child: Text('Active')),
-                      DropdownMenuItem(value: 'inactive', child: Text('Inactive')),
-                    ],
-                    onChanged: (value) => status = value!,
-                    decoration: const InputDecoration(labelText: 'Status'),
-                  ),
-                ],
+              child: Form(
+                key: formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextFormField(
+                      controller: nameController,
+                      decoration: const InputDecoration(labelText: 'Name'),
+                      validator: (value) => value == null || value.isEmpty ? 'Name is required' : null,
+                    ),
+                    TextFormField(
+                      controller: emailController,
+                      decoration: const InputDecoration(labelText: 'Email'),
+                      validator: (value) => value == null || value.isEmpty ? 'Email is required' : null,
+                    ),
+                    TextFormField(
+                      controller: phoneController,
+                      decoration: const InputDecoration(labelText: 'Phone'),
+                      validator: (value) => value == null || value.isEmpty ? 'Phone is required' : null,
+                    ),
+                    if (user == null)
+                      TextFormField(
+                        controller: passwordController,
+                        obscureText: true,
+                        decoration: const InputDecoration(labelText: 'Password'),
+                        validator: (value) => value == null || value.isEmpty ? 'Password is required' : null,
+                      ),
+                    DropdownButtonFormField<String>(
+                      value: role,
+                      decoration: const InputDecoration(labelText: 'Role'),
+                      items: const [
+                        DropdownMenuItem(value: 'admin', child: Text('Admin')),
+                        DropdownMenuItem(value: 'staff', child: Text('Staff')),
+                        DropdownMenuItem(value: 'teacher', child: Text('Teacher')),
+                        DropdownMenuItem(value: 'student', child: Text('Student')),
+                      ],
+                      onChanged: (value) => role = value!,
+                      validator: (value) => value == null || value.isEmpty ? 'Role is required' : null,
+                    ),
+                    DropdownButtonFormField<String>(
+                      value: status,
+                      decoration: const InputDecoration(labelText: 'Status'),
+                      items: const [
+                        DropdownMenuItem(value: 'active', child: Text('Active')),
+                        DropdownMenuItem(value: 'inactive', child: Text('Inactive')),
+                      ],
+                      onChanged: (value) => status = value!,
+                      validator: (value) => value == null || value.isEmpty ? 'Status is required' : null,
+                    ),
+                  ],
+                ),
               ),
             ),
             actions: [
               TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
               ElevatedButton(
                 onPressed: () async {
-                  try {
-                    final data = {
-                      'id': user?.id,
-                      'name': nameController.text,
-                      'email': emailController.text,
-                      'phone': phoneController.text,
-                      if (user == null) 'password': passwordController.text,
-                      'role': role,
-                      'status': status,
-                    }..removeWhere((key, value) => value == null);
+                  if (formKey.currentState?.validate() ?? false) {
+                    try {
+                      final data = {
+                        'id': user?.id,
+                        'name': nameController.text,
+                        'email': emailController.text,
+                        'phone': phoneController.text,
+                        if (user == null) 'password': passwordController.text,
+                        'role': role,
+                        'status': status,
+                      }..removeWhere((key, value) => value == null);
 
-                    if (user == null) {
-                      await _api.createUser(data);
-                    } else {
-                      await _api.updateUser(data);
-                    }
+                      if (user == null) {
+                        await _api.createUser(data);
+                      } else {
+                        await _api.updateUser(data);
+                      }
 
-                    if (context.mounted) {
-                      context.navigateBack();
+                      if (mounted) {
+                        context.navigateBack();
+                      }
+                      _loadUsers();
+                    } catch (e) {
+                      _showError(e.toString());
                     }
-                    _loadUsers();
-                  } catch (e) {
-                    _showError(e.toString());
                   }
                 },
                 child: const Text('Save'),

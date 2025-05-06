@@ -100,13 +100,15 @@ class _ManageStudentsPageState extends State<ManageStudentsPage> {
   }
 
   void _showStudentFormDialog({StudentVO? student}) {
+    final formKey = GlobalKey<FormState>();
+
     final nameController = TextEditingController(text: student?.name ?? '');
     final emailController = TextEditingController(text: student?.email ?? '');
     final phoneController = TextEditingController(text: student?.phone ?? '');
     final addressController = TextEditingController(text: student?.address ?? '');
     final guardianNameController = TextEditingController(text: student?.guardianName ?? '');
     final dateOfBirthController = TextEditingController(text: student?.dateOfBirth ?? DateFormat('yyyy-MM-dd').format(DateTime.now()));
-    final passwordController = TextEditingController(); // 👈 For new student password input
+    final passwordController = TextEditingController(); // only for new student
     String gender = student?.gender ?? 'Male';
 
     int? selectedClassId = student?.classId;
@@ -138,75 +140,108 @@ class _ManageStudentsPageState extends State<ManageStudentsPage> {
                   title: Text(student == null ? 'Add Student' : 'Edit Student'),
                   content: SizedBox(
                     width: 400,
-                    child: SingleChildScrollView(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          TextField(controller: nameController, decoration: const InputDecoration(labelText: 'Name')),
-                          TextField(controller: emailController, decoration: const InputDecoration(labelText: 'Email')),
-                          TextField(controller: phoneController, decoration: const InputDecoration(labelText: 'Phone')),
-                          if (student == null)
-                            TextField(
-                              controller: passwordController,
-                              decoration: const InputDecoration(labelText: 'Password'),
-                              obscureText: true,
+                    child: Form(
+                      key: formKey,
+                      child: SingleChildScrollView(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            TextFormField(
+                              controller: nameController,
+                              decoration: const InputDecoration(labelText: 'Name'),
+                              validator: (val) => val == null || val.isEmpty ? 'Name is required' : null,
                             ),
-                          TextField(
-                            controller: dateOfBirthController,
-                            readOnly: true,
-                            decoration: const InputDecoration(labelText: 'Date of Birth'),
-                            onTap: () async {
-                              final picked = await showDatePicker(
-                                context: context,
-                                initialDate: DateTime.now(),
-                                firstDate: DateTime(1990),
-                                lastDate: DateTime(2100),
-                              );
-                              if (picked != null) {
-                                dateOfBirthController.text = DateFormat('yyyy-MM-dd').format(picked);
-                              }
-                            },
-                          ),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: RadioListTile<String>(
-                                  title: const Text('Male'),
-                                  value: 'Male',
-                                  groupValue: gender,
-                                  onChanged: (val) => setState(() => gender = val!),
+                            TextFormField(
+                              controller: emailController,
+                              decoration: const InputDecoration(labelText: 'Email'),
+                              validator: (val) => val == null || val.isEmpty ? 'Email is required' : null,
+                            ),
+                            TextFormField(
+                              controller: phoneController,
+                              decoration: const InputDecoration(labelText: 'Phone'),
+                              validator: (val) => val == null || val.isEmpty ? 'Phone is required' : null,
+                            ),
+                            if (student == null)
+                              TextFormField(
+                                controller: passwordController,
+                                obscureText: true,
+                                decoration: const InputDecoration(labelText: 'Password'),
+                                validator: (val) => val == null || val.isEmpty ? 'Password is required' : null,
+                              ),
+                            TextFormField(
+                              controller: dateOfBirthController,
+                              readOnly: true,
+                              decoration: const InputDecoration(labelText: 'Date of Birth'),
+                              validator: (val) => val == null || val.isEmpty ? 'Date of Birth is required' : null,
+                              onTap: () async {
+                                final picked = await showDatePicker(
+                                  context: context,
+                                  initialDate: DateTime.now(),
+                                  firstDate: DateTime(1990),
+                                  lastDate: DateTime(2100),
+                                );
+                                if (picked != null) {
+                                  dateOfBirthController.text = DateFormat('yyyy-MM-dd').format(picked);
+                                }
+                              },
+                            ),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: RadioListTile<String>(
+                                    title: const Text('Male'),
+                                    value: 'Male',
+                                    groupValue: gender,
+                                    onChanged: (val) => setState(() => gender = val!),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: RadioListTile<String>(
+                                    title: const Text('Female'),
+                                    value: 'Female',
+                                    groupValue: gender,
+                                    onChanged: (val) => setState(() => gender = val!),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            TextFormField(
+                              controller: addressController,
+                              decoration: const InputDecoration(labelText: 'Address'),
+                              validator: (val) => val == null || val.isEmpty ? 'Address is required' : null,
+                            ),
+                            TextFormField(
+                              controller: guardianNameController,
+                              decoration: const InputDecoration(labelText: 'Guardian Name'),
+                              validator: (val) => val == null || val.isEmpty ? 'Guardian Name is required' : null,
+                            ),
+                            SizedBox(
+                              width: double.infinity,
+                              child: TextButton.icon(
+                                icon: const Icon(Icons.class_),
+                                label: Text(
+                                  selectedClassId != null && selectedClassName.isNotEmpty ? selectedClassName : 'Select Class *',
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                onPressed:
+                                    () => _showClassSelectorDialog((id, name) {
+                                      setState(() {
+                                        selectedClassId = id;
+                                        selectedClassName = name;
+                                      });
+                                    }),
+                              ),
+                            ),
+                            if (selectedClassId == null)
+                              const Align(
+                                alignment: Alignment.centerLeft,
+                                child: Padding(
+                                  padding: EdgeInsets.only(top: 4),
+                                  child: Text('You need to select a class', style: TextStyle(color: Colors.red, fontSize: 12)),
                                 ),
                               ),
-                              Expanded(
-                                child: RadioListTile<String>(
-                                  title: const Text('Female'),
-                                  value: 'Female',
-                                  groupValue: gender,
-                                  onChanged: (val) => setState(() => gender = val!),
-                                ),
-                              ),
-                            ],
-                          ),
-                          TextField(controller: addressController, decoration: const InputDecoration(labelText: 'Address')),
-                          TextField(controller: guardianNameController, decoration: const InputDecoration(labelText: 'Guardian Name')),
-                          SizedBox(
-                            width: double.infinity,
-                            child: TextButton.icon(
-                              icon: const Icon(Icons.class_),
-                              label: Text(
-                                selectedClassId != null && selectedClassName.isNotEmpty ? selectedClassName : 'Select Class *',
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              onPressed:
-                                  () => _showClassSelectorDialog((id, name) {
-                                    setState(() {
-                                      selectedClassId = id;
-                                      selectedClassName = name;
-                                    });
-                                  }),
-                            ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -214,31 +249,33 @@ class _ManageStudentsPageState extends State<ManageStudentsPage> {
                     TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
                     ElevatedButton(
                       onPressed: () async {
-                        try {
-                          final data = {
-                            'name': nameController.text,
-                            'email': emailController.text,
-                            'phone': phoneController.text,
-                            if (student == null) 'password': passwordController.text,
-                            'date_of_birth': dateOfBirthController.text,
-                            'class_id': selectedClassId.toString(),
-                            'gender': gender,
-                            'address': addressController.text,
-                            'guardian_name': guardianNameController.text,
-                          };
+                        if ((formKey.currentState?.validate() ?? false) && selectedClassId != null) {
+                          try {
+                            final data = {
+                              'name': nameController.text,
+                              'email': emailController.text,
+                              'phone': phoneController.text,
+                              if (student == null) 'password': passwordController.text,
+                              'date_of_birth': dateOfBirthController.text,
+                              'class_id': selectedClassId.toString(),
+                              'gender': gender,
+                              'address': addressController.text,
+                              'guardian_name': guardianNameController.text,
+                            };
 
-                          if (student == null) {
-                            await _api.createStudent(data);
-                          } else {
-                            await _api.updateStudent(data);
-                          }
+                            if (student == null) {
+                              await _api.createStudent(data);
+                            } else {
+                              await _api.updateStudent(data);
+                            }
 
-                          if (context.mounted) {
-                            context.navigateBack();
-                            _loadStudents();
+                            if (context.mounted) {
+                              context.navigateBack();
+                              _loadStudents();
+                            }
+                          } catch (e) {
+                            _showError(e.toString());
                           }
-                        } catch (e) {
-                          _showError(e.toString());
                         }
                       },
                       child: const Text('Save'),

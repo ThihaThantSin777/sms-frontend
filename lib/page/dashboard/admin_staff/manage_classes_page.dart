@@ -98,6 +98,7 @@ class _ManageClassesPageState extends State<ManageClassesPage> {
   }
 
   void _showClassFormDialog({ClassesVO? classVO}) {
+    final formKey = GlobalKey<FormState>();
     final nameController = TextEditingController(text: classVO?.className ?? '');
     final descriptionController = TextEditingController(text: classVO?.classDescription ?? '');
     final durationController = TextEditingController(text: classVO?.durationMonths.toString() ?? '');
@@ -140,94 +141,114 @@ class _ManageClassesPageState extends State<ManageClassesPage> {
                 title: Text(classVO == null ? 'Add Class' : 'Edit Class'),
                 content: SizedBox(
                   width: 400,
-                  child: SingleChildScrollView(
-                    child: Column(
-                      children: [
-                        TextField(controller: nameController, decoration: const InputDecoration(labelText: 'Class Name *')),
-                        TextFormField(
-                          controller: descriptionController,
-                          decoration: const InputDecoration(labelText: 'Description *'),
-                          maxLines: 3,
-                        ),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: TextButton.icon(
-                                icon: const Icon(Icons.access_time),
-                                label: Text(formatTime(localStartTime).isNotEmpty ? formatTime(localStartTime) : 'Start Time *'),
-                                onPressed: () => pickTime(true),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: TextButton.icon(
-                                icon: const Icon(Icons.access_time_outlined),
-                                label: Text(formatTime(localEndTime).isNotEmpty ? formatTime(localEndTime) : 'End Time *'),
-                                onPressed: () => pickTime(false),
-                              ),
-                            ),
-                          ],
-                        ),
-                        TextField(
-                          controller: durationController,
-                          decoration: const InputDecoration(labelText: 'Duration (months) *'),
-                          keyboardType: TextInputType.number,
-                        ),
-                        TextField(
-                          controller: maxStudentsController,
-                          decoration: const InputDecoration(labelText: 'Max Students *'),
-                          keyboardType: TextInputType.number,
-                        ),
-                        DropdownButtonFormField<String>(
-                          decoration: const InputDecoration(labelText: 'Class Level *'),
-                          value: classLevel,
-                          items:
-                              [
-                                'Beginner',
-                                'Intermediate',
-                                'Advanced',
-                              ].map((level) => DropdownMenuItem(value: level, child: Text(level))).toList(),
-                          onChanged: (val) => setState(() => classLevel = val ?? 'Beginner'),
-                        ),
-                        SizedBox(
-                          width: double.infinity,
-                          child: TextButton.icon(
-                            icon: const Icon(Icons.person_search),
-                            label: Text(
-                              selectedTeacherId != null
-                                  ? selectedTeacherName.isNotEmpty
-                                      ? selectedTeacherName
-                                      : (_teachers
-                                          .firstWhere(
-                                            (t) => t.id == selectedTeacherId,
-                                            orElse:
-                                                () => TeachersVO(
-                                                  id: 0,
-                                                  name: '',
-                                                  email: '',
-                                                  phone: '',
-                                                  specialization: '',
-                                                  joinedDate: '',
-                                                  experienceYears: 0,
-                                                  qualification: '',
-                                                  status: '',
-                                                ),
-                                          )
-                                          .name)
-                                  : 'Select Teacher *',
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            onPressed: () {
-                              _showTeacherSelectorDialog((id, name) {
-                                setState(() {
-                                  selectedTeacherId = id;
-                                  selectedTeacherName = name;
-                                });
-                              });
-                            },
+                  child: Form(
+                    key: formKey,
+                    child: SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          TextFormField(
+                            controller: nameController,
+                            decoration: const InputDecoration(labelText: 'Class Name *'),
+                            validator: (val) => val == null || val.isEmpty ? 'Class name is required' : null,
                           ),
-                        ),
-                      ],
+                          TextFormField(
+                            controller: descriptionController,
+                            decoration: const InputDecoration(labelText: 'Description *'),
+                            maxLines: 3,
+                            validator: (val) => val == null || val.isEmpty ? 'Description is required' : null,
+                          ),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextButton.icon(
+                                  icon: const Icon(Icons.access_time),
+                                  label: Text(formatTime(localStartTime).isNotEmpty ? formatTime(localStartTime) : 'Start Time *'),
+                                  onPressed: () => pickTime(true),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: TextButton.icon(
+                                  icon: const Icon(Icons.access_time_outlined),
+                                  label: Text(formatTime(localEndTime).isNotEmpty ? formatTime(localEndTime) : 'End Time *'),
+                                  onPressed: () => pickTime(false),
+                                ),
+                              ),
+                            ],
+                          ),
+                          if (localStartTime == null || localEndTime == null)
+                            const Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text("Start and End time are required", style: TextStyle(color: Colors.red, fontSize: 12)),
+                            ),
+                          TextFormField(
+                            controller: durationController,
+                            decoration: const InputDecoration(labelText: 'Duration (months) *'),
+                            keyboardType: TextInputType.number,
+                            validator: (val) => val == null || val.isEmpty ? 'Duration is required' : null,
+                          ),
+                          TextFormField(
+                            controller: maxStudentsController,
+                            decoration: const InputDecoration(labelText: 'Max Students *'),
+                            keyboardType: TextInputType.number,
+                            validator: (val) => val == null || val.isEmpty ? 'Max students is required' : null,
+                          ),
+                          DropdownButtonFormField<String>(
+                            decoration: const InputDecoration(labelText: 'Class Level *'),
+                            value: classLevel,
+                            items:
+                                [
+                                  'Beginner',
+                                  'Intermediate',
+                                  'Advanced',
+                                ].map((level) => DropdownMenuItem(value: level, child: Text(level))).toList(),
+                            onChanged: (val) => setState(() => classLevel = val ?? 'Beginner'),
+                          ),
+                          SizedBox(
+                            width: double.infinity,
+                            child: TextButton.icon(
+                              icon: const Icon(Icons.person_search),
+                              label: Text(
+                                selectedTeacherId != null
+                                    ? selectedTeacherName.isNotEmpty
+                                        ? selectedTeacherName
+                                        : (_teachers
+                                            .firstWhere(
+                                              (t) => t.id == selectedTeacherId,
+                                              orElse:
+                                                  () => TeachersVO(
+                                                    id: 0,
+                                                    name: '',
+                                                    email: '',
+                                                    phone: '',
+                                                    specialization: '',
+                                                    joinedDate: '',
+                                                    experienceYears: 0,
+                                                    qualification: '',
+                                                    status: '',
+                                                  ),
+                                            )
+                                            .name)
+                                    : 'Select Teacher *',
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              onPressed: () {
+                                _showTeacherSelectorDialog((id, name) {
+                                  setState(() {
+                                    selectedTeacherId = id;
+                                    selectedTeacherName = name;
+                                  });
+                                });
+                              },
+                            ),
+                          ),
+                          if (selectedTeacherId == null)
+                            const Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text("You need to select a teacher.", style: TextStyle(color: Colors.red, fontSize: 12)),
+                            ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -235,45 +256,37 @@ class _ManageClassesPageState extends State<ManageClassesPage> {
                   TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
                   ElevatedButton(
                     onPressed: () async {
-                      if (nameController.text.isEmpty ||
-                          descriptionController.text.isEmpty ||
-                          localStartTime == null ||
-                          localEndTime == null ||
-                          selectedTeacherId == null ||
-                          durationController.text.isEmpty ||
-                          maxStudentsController.text.isEmpty ||
-                          classLevel.isEmpty) {
-                        context.showErrorSnackBar("Please fill all required fields.");
-                        return;
-                      }
+                      if ((formKey.currentState?.validate() ?? false) &&
+                          localStartTime != null &&
+                          localEndTime != null &&
+                          selectedTeacherId != null) {
+                        try {
+                          final data = {
+                            'id': classVO?.id,
+                            'class_name': nameController.text,
+                            'class_description': descriptionController.text,
+                            'start_time':
+                                "${localStartTime?.hour.toString().padLeft(2, '0')}:${localStartTime?.minute.toString().padLeft(2, '0')}",
+                            'end_time':
+                                "${localEndTime?.hour.toString().padLeft(2, '0')}:${localEndTime?.minute.toString().padLeft(2, '0')}",
+                            'duration_months': durationController.text,
+                            'max_students': maxStudentsController.text,
+                            'class_level': classLevel,
+                            'teacher_id': selectedTeacherId.toString(),
+                          }..removeWhere((k, v) => v == null || v.toString().isEmpty);
 
-                      try {
-                        final data = {
-                          'id': classVO?.id,
-                          'class_name': nameController.text,
-                          'class_description': descriptionController.text,
-                          'start_time':
-                              "${localStartTime?.hour.toString().padLeft(2, '0')}:${localStartTime?.minute.toString().padLeft(2, '0')}",
-                          'end_time': "${localEndTime?.hour.toString().padLeft(2, '0')}:${localEndTime?.minute.toString().padLeft(2, '0')}",
-                          'duration_months': durationController.text,
-                          'max_students': maxStudentsController.text,
-                          'class_level': classLevel,
-                          'teacher_id': selectedTeacherId.toString(),
-                        }..removeWhere((k, v) => v == null || v.toString().isEmpty);
+                          if (classVO == null) {
+                            await _api.createClass(data);
+                          } else {
+                            await _api.updateClass(data);
+                          }
 
-                        if (classVO == null) {
-                          await _api.createClass(data);
-                        } else {
-                          await _api.updateClass(data);
-                        }
-
-                        if (context.mounted) {
-                          context.navigateBack();
-                          _loadData();
-                        }
-                      } catch (e) {
-                        if (context.mounted) {
-                          context.showErrorSnackBar(e.toString());
+                          if (context.mounted) {
+                            context.navigateBack();
+                            _loadData();
+                          }
+                        } catch (e) {
+                          if (context.mounted) context.showErrorSnackBar(e.toString());
                         }
                       }
                     },

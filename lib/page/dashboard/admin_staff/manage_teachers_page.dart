@@ -40,6 +40,8 @@ class _ManageTeachersPageState extends State<ManageTeachersPage> {
   }
 
   void _showTeacherFormDialog({TeachersVO? teacher}) {
+    final formKey = GlobalKey<FormState>();
+
     final now = DateTime.now();
     final initialDate = teacher?.joinedDate ?? "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
 
@@ -50,7 +52,8 @@ class _ManageTeachersPageState extends State<ManageTeachersPage> {
     final joinedDateController = TextEditingController(text: initialDate);
     final passwordController = TextEditingController();
     final qualificationController = TextEditingController(text: teacher?.qualification ?? '');
-    final experienceYearsController = TextEditingController(text: teacher?.experienceYears.toString());
+    final experienceYearsController = TextEditingController(text: teacher?.experienceYears.toString() ?? '');
+
     showDialog(
       context: context,
       builder:
@@ -58,40 +61,70 @@ class _ManageTeachersPageState extends State<ManageTeachersPage> {
             title: Text(teacher == null ? 'Add Teacher' : 'Edit Teacher'),
             content: SizedBox(
               width: 400,
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    TextField(controller: nameController, decoration: const InputDecoration(labelText: 'Name')),
-                    TextField(controller: emailController, decoration: const InputDecoration(labelText: 'Email')),
-                    if (teacher == null)
-                      TextField(
-                        controller: passwordController,
-                        obscureText: true,
-                        decoration: const InputDecoration(labelText: 'Password'),
+              child: Form(
+                key: formKey,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      TextFormField(
+                        controller: nameController,
+                        decoration: const InputDecoration(labelText: 'Name'),
+                        validator: (value) => value == null || value.isEmpty ? 'Name is required' : null,
                       ),
-                    TextField(controller: qualificationController, decoration: const InputDecoration(labelText: 'Qualification')),
-                    TextField(controller: experienceYearsController, decoration: const InputDecoration(labelText: 'Experience Years')),
-                    TextField(controller: phoneController, decoration: const InputDecoration(labelText: 'Phone')),
-                    TextField(controller: specializationController, decoration: const InputDecoration(labelText: 'Specialization')),
-                    TextField(
-                      controller: joinedDateController,
-                      readOnly: true,
-                      decoration: const InputDecoration(labelText: 'Joined Date'),
-                      onTap: () async {
-                        final picked = await showDatePicker(
-                          context: context,
-                          initialDate: now,
-                          firstDate: DateTime(2000),
-                          lastDate: DateTime(2100),
-                        );
-                        if (picked != null) {
-                          joinedDateController.text =
-                              "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
-                        }
-                      },
-                    ),
-                  ],
+                      TextFormField(
+                        controller: emailController,
+                        decoration: const InputDecoration(labelText: 'Email'),
+                        validator: (value) => value == null || value.isEmpty ? 'Email is required' : null,
+                      ),
+                      if (teacher == null)
+                        TextFormField(
+                          controller: passwordController,
+                          obscureText: true,
+                          decoration: const InputDecoration(labelText: 'Password'),
+                          validator: (value) => value == null || value.isEmpty ? 'Password is required' : null,
+                        ),
+                      TextFormField(
+                        controller: qualificationController,
+                        decoration: const InputDecoration(labelText: 'Qualification'),
+                        validator: (value) => value == null || value.isEmpty ? 'Qualification is required' : null,
+                      ),
+                      TextFormField(
+                        controller: experienceYearsController,
+                        decoration: const InputDecoration(labelText: 'Experience Years'),
+                        keyboardType: TextInputType.number,
+                        validator: (value) => value == null || value.isEmpty ? 'Experience is required' : null,
+                      ),
+                      TextFormField(
+                        controller: phoneController,
+                        decoration: const InputDecoration(labelText: 'Phone'),
+                        validator: (value) => value == null || value.isEmpty ? 'Phone is required' : null,
+                      ),
+                      TextFormField(
+                        controller: specializationController,
+                        decoration: const InputDecoration(labelText: 'Specialization'),
+                        validator: (value) => value == null || value.isEmpty ? 'Specialization is required' : null,
+                      ),
+                      TextFormField(
+                        controller: joinedDateController,
+                        readOnly: true,
+                        decoration: const InputDecoration(labelText: 'Joined Date'),
+                        validator: (value) => value == null || value.isEmpty ? 'Joined date is required' : null,
+                        onTap: () async {
+                          final picked = await showDatePicker(
+                            context: context,
+                            initialDate: now,
+                            firstDate: DateTime(2000),
+                            lastDate: DateTime(2100),
+                          );
+                          if (picked != null) {
+                            joinedDateController.text =
+                                "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
+                          }
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -99,32 +132,32 @@ class _ManageTeachersPageState extends State<ManageTeachersPage> {
               TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
               ElevatedButton(
                 onPressed: () async {
-                  try {
-                    final data = {
-                      'name': nameController.text,
-                      'email': emailController.text,
-                      'phone': phoneController.text,
-                      'password': teacher == null ? passwordController.text : null, // only when creating
-                      'role': 'teacher',
-                      'specialization': specializationController.text,
-                      'joined_date': joinedDateController.text,
-                      'qualification': qualificationController.text,
-                      'experience_years': experienceYearsController.text,
-                      'status': 'active',
-                    }..removeWhere((key, value) => value == null);
+                  if (formKey.currentState?.validate() ?? false) {
+                    try {
+                      final data = {
+                        'name': nameController.text,
+                        'email': emailController.text,
+                        'phone': phoneController.text,
+                        'password': teacher == null ? passwordController.text : null,
+                        'role': 'teacher',
+                        'specialization': specializationController.text,
+                        'joined_date': joinedDateController.text,
+                        'qualification': qualificationController.text,
+                        'experience_years': experienceYearsController.text,
+                        'status': 'active',
+                      }..removeWhere((key, value) => value == null);
 
-                    if (teacher == null) {
-                      await _api.createTeacher(data);
-                    } else {
-                      await _api.updateTeacher(data);
-                    }
-                    if (mounted) {
-                      context.navigateBack();
-                    }
+                      if (teacher == null) {
+                        await _api.createTeacher(data);
+                      } else {
+                        await _api.updateTeacher(data);
+                      }
 
-                    _loadTeachers();
-                  } catch (e) {
-                    _showError(e.toString());
+                      if (mounted) context.navigateBack();
+                      _loadTeachers();
+                    } catch (e) {
+                      _showError(e.toString());
+                    }
                   }
                 },
                 child: const Text('Save'),
