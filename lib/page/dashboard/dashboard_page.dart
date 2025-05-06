@@ -148,9 +148,11 @@ class _DashboardPageState extends State<DashboardPage> {
         children: [
           if (_currentUser?.role == 'admin')
             _buildStatCard(_currentUser?.role == 'admin' ? "Admin" : "Staff", Icons.supervisor_account, userCount, Colors.purple.shade400),
-          if (_currentUser?.role == 'admin') _buildStatCard("Teachers", Icons.school, teacherCount, Colors.orange.shade400),
-          if (_currentUser?.role == 'admin') _buildStatCard("Students", Icons.group, studentCount, Colors.green.shade400),
-          if (_currentUser?.role == 'admin') _buildStatCard("Classes", Icons.class_, classCount, Colors.blue.shade300),
+          if (_currentUser?.role == 'admin' || _currentUser?.role == 'staff')
+            _buildStatCard("Teachers", Icons.school, teacherCount, Colors.orange.shade400),
+
+          _buildStatCard("Students", Icons.group, studentCount, Colors.green.shade400),
+          _buildStatCard("Classes", Icons.class_, classCount, Colors.blue.shade300),
         ],
       ),
     );
