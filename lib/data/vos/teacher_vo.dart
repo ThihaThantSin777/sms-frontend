@@ -7,7 +7,6 @@ class TeachersVO {
   final String joinedDate;
   final String qualification;
   final int experienceYears;
-  final String status;
 
   TeachersVO({
     required this.id,
@@ -17,7 +16,6 @@ class TeachersVO {
     required this.specialization,
     required this.qualification,
     required this.experienceYears,
-    required this.status,
     required this.joinedDate,
   });
 
@@ -30,7 +28,6 @@ class TeachersVO {
       specialization: json['specialization'],
       qualification: json['qualification'],
       experienceYears: json['experience_years'],
-      status: json['status'],
       joinedDate: json['joined_date'],
     );
   }
@@ -44,7 +41,6 @@ class TeachersVO {
       'specialization': specialization,
       'qualification': qualification,
       'experienceYears': experienceYears,
-      'status': status,
       'joined_date': joinedDate,
     };
   }

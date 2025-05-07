@@ -232,7 +232,6 @@ class _ManageClassesPageState extends State<ManageClassesPage> {
                                                     joinedDate: '',
                                                     experienceYears: 0,
                                                     qualification: '',
-                                                    status: '',
                                                   ),
                                             )
                                             .name)
